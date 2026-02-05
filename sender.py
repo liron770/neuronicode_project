@@ -1,44 +1,42 @@
 import subprocess
 import time
-import signal
+import os
 
-video_source = "videoRoadTraffic.mp4"  
-sdp_path = "stream.sdp"
+def start_sender():
+    video_source = "videoRoadTraffic.mp4"  
+    sdp_path = "stream.sdp"
 
-ffmpeg_cmd = [
-    "ffmpeg",
-    "-re",                       
-    "-stream_loop", "-1",       
-    "-i", video_source,
-    "-vf", "scale=1280:720",
-    "-r", "25",
-    "-c:v", "libx264",
-    "-profile:v", "baseline",
-    "-level", "3.1",
-    "-pix_fmt", "yuv420p",
-    "-g", "25",
-    "-keyint_min", "25",
-    "-b:v", "2M",
-    "-maxrate", "2M",
-    "-bufsize", "4M",
-    "-x264-params", "repeat-headers=1:nal-hrd=cbr",
-    "-an",                     
-    "-f", "rtp",
-    "-sdp_file", sdp_path,
-    "rtp://127.0.0.1:5004"
-]
+    if not os.path.exists(video_source):
+        print(f"[-] Error: {video_source} not found!")
+        return
 
-print("[+] Starting FFmpeg RTP stream...")
-ffmpeg_process = subprocess.Popen(ffmpeg_cmd)
+    ffmpeg_cmd = [
+        'ffmpeg',
+        '-re',                         
+        '-stream_loop', '-1',          
+        '-i', video_source,
+        '-vf', 'scale=1280:720',       
+        '-r', '25',                    
+        '-c:v', 'libx264',            
+        '-preset', 'ultrafast',         
+        '-tune', 'zerolatency',       
+        '-f', 'rtp',
+        '-sdp_file', sdp_path,         
+        'rtp://127.0.0.1:5004'
+    ]
 
-try:
-    while True:
-        # מחכה שהסטרים ירוץ
-        time.sleep(1)
-except KeyboardInterrupt:
-    print("[!] Interrupted by user, stopping stream...")
-finally:
-    if ffmpeg_process.poll() is None:
-        ffmpeg_process.send_signal(signal.SIGINT)
-        ffmpeg_process.wait()
-    print("[+] Sender stopped.")
+    print("[+] Starting FFmpeg RTP H.264 stream...")
+    ffmpeg_process = subprocess.Popen(ffmpeg_cmd)
+
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("[!] Stopping sender...")
+    finally:
+        if ffmpeg_process.poll() is None:
+            ffmpeg_process.terminate()
+        print("[+] Sender stopped.")
+
+if __name__ == "__main__":
+    start_sender()

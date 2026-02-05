@@ -1,0 +1,7 @@
+{
+    "total_frames": 270,
+    "detected_frames": 266,
+    "detection_ratio": 0.99,
+    "avg_latency_ms": 101.09,
+    "max_latency_ms": 8206.039905548096
+}

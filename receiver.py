@@ -3,55 +3,87 @@ import time
 import subprocess
 import cv2
 import numpy as np
+import json
 
-sdp_path = "stream.sdp"
-
-while not os.path.exists(sdp_path):
-    print("[-] Waiting for stream.sdp to be created by sender...")
-    time.sleep(1)
-
-print("[+] Found stream.sdp, starting FFmpeg subprocess (whitelisted protocols)...")
-
-ffmpeg_cmd = [
-    "ffmpeg",
-    "-protocol_whitelist", "file,udp,rtp",
-    "-i", sdp_path,
-    "-pix_fmt", "bgr24",
-    "-s", "1280x720",
-    "-f", "rawvideo",
-    "-"
-]
-
-process = None
-try:
-    process = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    print("[+] FFmpeg started")
-
+def start_receiver():
+    sdp_path = "stream.sdp"
     width, height = 1280, 720
     frame_size = width * height * 3
 
-    while True:
-        raw = process.stdout.read(frame_size)
-        if len(raw) < frame_size:
-            time.sleep(0.01)
-            continue
+    metrics = {"total_frames": 0, "detected_frames": 0, "latencies": []}
+    
+    car_cascade = cv2.CascadeClassifier('cars.xml')
+    if car_cascade.empty():
+        print("[-] Error: Could not load cars.xml!")
+        return
 
-        frame = np.frombuffer(raw, dtype=np.uint8).reshape((height, width, 3))
-        cv2.imshow("RTP Stream", frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+    while not os.path.exists(sdp_path):
+        print("[-] Waiting for stream.sdp to be created by sender...")
+        time.sleep(1)
 
-except KeyboardInterrupt:
-    print("[!] Interrupted by user")
-except Exception as e:
-    print(f"[-] Error while running FFmpeg subprocess: {e}")
-finally:
-    print("[*] Cleaning up...")
-    if process is not None:
-        try:
+    ffmpeg_cmd = [
+        "ffmpeg",
+        "-protocol_whitelist", "file,udp,rtp",
+        "-i", sdp_path,
+        "-f", "rawvideo",
+        "-pix_fmt", "bgr24",
+        "-an",
+        "-"
+    ]
+
+    process = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    print("[+] Receiver started. Processing stream...")
+
+    try:
+        while True:
+            start_time = time.time()
+            
+            raw = process.stdout.read(frame_size)
+            if not raw or len(raw) < frame_size:
+                continue
+
+            frame = np.frombuffer(raw, dtype=np.uint8).reshape((height, width, 3)).copy()
+            metrics["total_frames"] += 1
+
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            cars = car_cascade.detectMultiScale(gray, 1.1, 2)
+            
+            if len(cars) > 0:
+                metrics["detected_frames"] += 1
+                for (x, y, w, h) in cars:
+                    cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+            latency = (time.time() - start_time) * 1000
+            metrics["latencies"].append(latency)
+
+            cv2.putText(frame, f"Frames: {metrics['total_frames']}", (50, 50), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
+            cv2.imshow("QA Vehicle Detection", frame)
+            
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+
+    except Exception as e:
+        print(f"[-] Runtime Error: {e}")
+
+    finally:
+        if metrics["total_frames"] > 0 and len(metrics["latencies"]) > 0:
+            final_report = {
+                "total_frames": metrics["total_frames"],
+                "detected_frames": metrics["detected_frames"],
+                "detection_ratio": round(metrics["detected_frames"]/metrics["total_frames"], 2),
+                "avg_latency_ms": round(sum(metrics["latencies"])/len(metrics["latencies"]), 2),
+                "max_latency_ms": max(metrics["latencies"]) if metrics["latencies"] else 0,
+            }
+            with open("metrics.json", "w") as f:
+                json.dump(final_report, f, indent=4)
+            print("[+] Metrics saved to metrics.json")
+        else:
+            print("[-] No frames were processed. Metrics not saved.")
+
+        if process:
             process.terminate()
-            process.wait(timeout=2)
-        except Exception:
-            pass
-    cv2.destroyAllWindows()
-    print("[+] Receiver stopped.")
+        cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    start_receiver()
