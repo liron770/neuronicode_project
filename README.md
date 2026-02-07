@@ -1,29 +1,29 @@
-QA Automation Home Assignment — RTP H264 Vehicle Detection 
+# QA Automation Home Assignment — RTP H264 Vehicle Detection 
 
 A distributed system for real-time vehicle detection in video streams, utilizing RTP/SDP communication between a Sender and a Receiver.
 
-Project Structure
+# Project Structure
 
-├── tests/                  # Test suite directory
-│   ├── test_system.py      # Main integration tests
-│   ├── test_negative.py    # Edge case and failure handling tests
-│   ├── config.py           # Test environment configurations
-│   └── utils.py            # Helper functions for tests 
-├── videoRoadTraffic.mp4    # Input video source
-├── cars.xml                # Haar Cascade model for vehicle detection
-├── Dockerfile              # Container configuration
-├── requirements.txt        # Python dependencies
-└── metrics.json            # Output file for system performance data
-├── sender.py               # Streams video frames via RTP using FFmpeg
-├── receiver.py             # Captures stream, runs AI detection, and logs metrics
+ tests/                  # Test suite directory
+   - test_system.py      # Main integration tests
+   - test_negative.py    # Edge case and failure handling tests
+   - config.py           # Test environment configurations
+   - utils.py            # Helper functions for tests 
+- videoRoadTraffic.mp4    # Input video source
+- cars.xml                # Haar Cascade model for vehicle detection
+- Dockerfile              # Container configuration
+- requirements.txt        # Python dependencies
+- metrics.json            # Output file for system performance data
+- sender.py               # Streams video frames via RTP using FFmpeg
+- receiver.py             # Captures stream, runs AI detection, and logs metrics
 
-Project Overview
+# Project Overview
 
 The system consists of two main microservices:
 Sender: Reads a video file and streams it via RTP using FFmpeg.
 Receiver: Captures the stream, performs image processing (OpenCV Haar Cascades) to detect vehicles, and generates real-time performance metrics exported to a JSON file.
 
-Visual AI Validation (Bounding Boxes)
+# Visual AI Validation (Bounding Boxes)
 
 The system doesn't just process data, it provides real-time visual feedback:
 
@@ -31,7 +31,7 @@ Dynamic Bounding Boxes: The Receiver draws green rectangles around every detecte
 
 Frame-by-Frame Processing: Each frame is analyzed using the Haar Cascade model, and the coordinates are mapped instantly to the video display window.
 
-Execution Instructions
+# Execution Instructions
 
 Option 1: Running on Windows (Recommended for AI Validation)
 To see the AI detection working with full accuracy, run the system natively:
@@ -46,16 +46,16 @@ Note: FFmpeg must be installed and the bin folder must be added to your System E
 
 To verify, run ffmpeg -version in your terminal. If it's not recognized, the sender.py will fail to start.
 
-Install Dependencies:
+#Install Dependencies:
 
-Bash
+# Bash
 pip install -r requirements.txt
 Run Tests:
 
-Bash
+# Bash
 pytest -v
 
-Manual Run:
+# Manual Run:
 
 Start the Receiver: python receiver.py
 Start the Sender: python sender.py
@@ -70,7 +70,7 @@ docker build -t vehicle-detection .
 # Run automated suite
 docker run -it --rm vehicle-detection pytest -v
 
-Challenges && Known Issues
+# Challenges && Known Issues
 
 1. AI Inference Discrepancy (Docker vs. Windows)
 The Challenge: While the AI detection logic performs perfectly in a native Windows environment (achieving stable detection ratios), it encounters issues within the Docker container.
@@ -91,7 +91,8 @@ The Challenge: Orphaned FFmpeg and Python processes remained active after test f
 
 The Solution: Integrated the psutil library into the test teardown phase to recursively terminate all child processes, ensuring a clean environment for every test execution.
 
-Metrics Collected
+# Metrics Collected
+
 The system generates a metrics.json report containing:
 
 total_frames: Total frames processed by the Receiver.
