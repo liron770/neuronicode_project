@@ -2,29 +2,35 @@ import json
 import os
 import time
 import pytest
-import subprocess
-import cv2
+import psutil 
 
-
-def cleanup_processes(processes):
+def remove_file_if_exists(files):
     """
-    Terminate and clean up a list of subprocesses gracefully.
-     :param processes: List of subprocess.Popen objects
+    Utility function to remove specified files if they exist.
+     :param files: List of file paths to remove
     """
-    print("---Starting cleanup---")
-    for proc in processes:
-        if proc and proc.poll() is None:
+    for file_path in files:
+        if os.path.exists(file_path):
             try:
-                proc.terminate()
-                proc.wait(timeout=3)
-                print(f"    - Process {proc.pid} terminated gracefully.")
-            except subprocess.TimeoutExpired:
-                print(f"    - Process {proc.pid} stuck, killing it...")
-                proc.kill()
-                proc.wait()
-    cv2.destroyAllWindows()
-    print("---Cleanup complete. All processes stopped and windows closed.---")
-
+                os.remove(file_path)
+            except Exception as e:
+                print(f"[!] Error removing file {file_path}: {e}")
+    
+def kill_process_tree(parent_pid):
+    """
+    Kills a process and all of its child processes.
+     :param parent_pid: PID of the parent process to kill
+    """
+    try:
+        parent = psutil.Process(parent_pid)
+        children = parent.children(recursive=True)
+        for child in children:
+            print(f"- Killing child process: {child.pid} ({child.name()})")
+            child.kill()
+        print(f"- Killing parent process: {parent.pid}")
+        parent.kill()
+    except psutil.NoSuchProcess:
+        pass
 
 def wait_for_file(file_path, timeout, cleanup_proc, error_msg):
     """
@@ -44,7 +50,7 @@ def wait_for_file(file_path, timeout, cleanup_proc, error_msg):
     return True
 
 
-def wait_for_metrics_content(file_path, min_frames, timeout=20):
+def wait_for_metrics_content(file_path, min_frames=5, timeout=20):
     """
     Waits for the metrics file to contain at least min_frames total_frames.
      :param file_path: Path to the metrics.json file
@@ -66,28 +72,27 @@ def wait_for_metrics_content(file_path, min_frames, timeout=20):
     return None
 
 
-def wait_for_data_growth(file_path, key="total_frames", wait_time=3, timeout=20):
+def wait_for_data_growth(file_path,wait_time=2, timeout=25):
     """
-    Waits for a specific key in the JSON file to show growth after a wait time.
-     :param file_path: Path to the JSON file to monitor
-     :param key: The specific key in the JSON to monitor for growth
-     :param wait_time: Time to wait before checking for growth (in seconds)
-     :param timeout: Maximum time to wait for growth (in seconds)
-     :return: Tuple (is_growing: bool, final_data: dict or None)
+    Waits for a total_frames count to grow in the metrics file, indicating that the system is actively processing frames.
     """
-    initial_data = wait_for_metrics_content(file_path, min_frames=1, timeout=timeout)
+    key="total_frames"
+    start_time = time.time()
+    initial_data = wait_for_metrics_content(file_path)
     if not initial_data:
         return False, None
-    first_count = initial_data.get(key, 0)
-    time.sleep(wait_time)
-    try:
-        with open(file_path, "r") as f:
-            second_data = json.load(f)
-            second_count = second_data.get(key, 0)
-
-            if second_count > first_count:
-                return True, second_data
-    except Exception:
-        pass
-
+    
+    first_count = initial_data[key]
+    while time.time() - start_time < timeout:
+        time.sleep(wait_time)      
+        try:
+            if os.path.exists(file_path):
+                current_data = wait_for_metrics_content(file_path)
+                current_count = current_data[key]                  
+                if current_count > first_count:
+                    print(f"[+] Growth detected! {first_count} -> {current_count}")
+                    return True, current_data
+        except (json.JSONDecodeError, IOError):
+            continue           
+    print(f"[!] Timeout: No growth detected for {key} after {timeout}s")
     return False, initial_data

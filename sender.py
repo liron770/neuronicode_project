@@ -1,15 +1,17 @@
 import subprocess
+import sys
 import time
 import os
 
 
 def start_sender():
-    video_source = "videoRoadTraffic.mp4"
-    sdp_path = "stream.sdp"
+    video_source = sys.argv[1] if len(sys.argv) > 1 else "videoRoadTraffic.mp4"
 
     if not os.path.exists(video_source):
         print(f"[-] Error: {video_source} not found!")
         return
+    
+    sdp_path = "stream.sdp"
 
     ffmpeg_cmd = [
         "ffmpeg",

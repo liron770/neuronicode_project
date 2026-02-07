@@ -52,7 +52,7 @@ def start_receiver():
             )
             metrics["total_frames"] += 1
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            cars = car_cascade.detectMultiScale(gray, 1.1, 2)
+            cars = car_cascade.detectMultiScale(gray, 1.05, 5, minSize=(50, 50))
             if len(cars) > 0:
                 metrics["detected_frames"] += 1
                 for x, y, w, h in cars:
