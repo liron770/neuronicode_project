@@ -7,7 +7,6 @@ SDP_FILE = "stream.sdp"
 METRICS_FILE = "metrics.json"
 
 SUBPROCESS_CONFIG = {
-    "env": {**os.environ, "SHOW_VIDEO": "false"}, 
     "stdout": subprocess.PIPE,
     "stderr": subprocess.DEVNULL,
     "text": True,
