@@ -52,7 +52,7 @@ def start_receiver():
             )
             metrics["total_frames"] += 1
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            cars = car_cascade.detectMultiScale(gray, 1.05, 5, minSize=(50, 50))
+            cars = car_cascade.detectMultiScale(gray, 1.1, 3, minSize=(30, 30))
             if len(cars) > 0:
                 metrics["detected_frames"] += 1
                 for x, y, w, h in cars:
@@ -83,9 +83,12 @@ def start_receiver():
                 (0, 255, 255),
                 2,
             )
-            cv2.imshow("QA Vehicle Detection", frame)
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
+            show_video = os.getenv('SHOW_VIDEO', 'true').lower() == 'true'
+            if show_video:
+                cv2.imshow('Vehicle Detection', frame)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                 break
+            
     except Exception as e:
         print(f"[-] Runtime Error: {e}")
     finally:

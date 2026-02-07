@@ -33,12 +33,26 @@ def start_system():
     finally:
         print("\n---Final Cleanup: Killing all processes---")
         for proc in processes:
-            if proc.poll() is None: 
-                kill_process_tree(proc.pid)
-        cv2.destroyAllWindows()
-        os.system(TASK_KILL_FFMPEG)
-        os.system(TASK_KILL_PYTHON)
-
+            try:
+                if proc.poll() is None:
+                    if os.name == 'nt':  # Windows
+                        kill_process_tree(proc.pid)
+                    else:  # Linux / Docker
+                        # שליחת סיגנל סגירה לקבוצת התהליכים (Process Group)
+                        os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+            except Exception as e:
+                print(f"[-] Debug: Individual process cleanup failed: {e}")
+                proc.terminate()
+        try:
+            cv2.destroyAllWindows()
+        except:
+            pass
+        if os.name == 'nt':
+            os.system(TASK_KILL_FFMPEG)
+            os.system(TASK_KILL_PYTHON)
+        else:
+            os.system("pkill -9 -f ffmpeg || true")
+            os.system("pkill -9 -f receiver.py || true")
 # --- AUTOMATION TESTS---
 
 def test_sdp_generation(start_system):

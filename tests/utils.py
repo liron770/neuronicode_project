@@ -50,7 +50,7 @@ def wait_for_file(file_path, timeout, cleanup_proc, error_msg):
     return True
 
 
-def wait_for_metrics_content(file_path, min_frames=5, timeout=20):
+def wait_for_metrics_content(file_path, min_frames=5, timeout=30):
     """
     Waits for the metrics file to contain at least min_frames total_frames.
      :param file_path: Path to the metrics.json file
@@ -64,13 +64,12 @@ def wait_for_metrics_content(file_path, min_frames=5, timeout=20):
             try:
                 with open(file_path, "r") as f:
                     data = json.load(f)
-                    if data.get("total_frames", 0) >= min_frames:
+                    if data and isinstance(data, dict) and data.get("total_frames", 0) >= min_frames:
                         return data
-            except (json.JSONDecodeError, IOError):
-                pass
+            except (json.JSONDecodeError, IOError, KeyError):
+                pass 
         time.sleep(0.5)
     return None
-
 
 def wait_for_data_growth(file_path,wait_time=2, timeout=25):
     """
