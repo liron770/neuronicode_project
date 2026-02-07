@@ -2,7 +2,6 @@ FROM python:3.11-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# התקנת ספריות מערכת (בשביל OpenCV ו-FFmpeg)
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglx-mesa0 \
@@ -15,14 +14,11 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# שדרוג כלי התקנה
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
-# התקנת כל הדרישות מקובץ אחד
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# העתקת שאר הפרויקט
 COPY . .
 
 ENV PYTHONUNBUFFERED=1

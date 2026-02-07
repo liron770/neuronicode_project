@@ -6,6 +6,37 @@ import time
 from config import *
 from utils import *
 
+import shutil
+import socket
+
+def is_running_in_docker():
+    """
+    Detect if the tests are running inside a Docker container by checking for the presence of /.dockerenv file.
+    """
+    return os.path.exists('/.dockerenv')
+
+@pytest.mark.skipif(not is_running_in_docker(), reason="Test is designed to run inside Docker container")
+def test_docker_container_setup():
+    """
+    This test validates the Docker container environment to ensure all necessary components are in place for the system to function correctly.
+        - Checks that FFmpeg is installed and accessible in the container.
+        - Verifies that the AI model XML file is present in the expected location.
+        - Confirms that the video file required for streaming exists.
+        - Validates basic networking capabilities of the container to ensure it can communicate with localhost.
+ """
+    print("\n[+] Running Docker Environment Validation...")
+    assert shutil.which("ffmpeg") is not None, "FFmpeg is not installed or not in PATH within the Docker container."
+    assert os.path.exists("cars.xml"), "AI model file 'cars.xml' is missing in the Docker container."
+    assert os.path.exists("videoRoadTraffic.mp4"), "Video file 'videoRoadTraffic.mp4' is missing in the Docker container."
+    try:
+        host_name = socket.gethostname()
+        host_ip = socket.gethostbyname(host_name)
+        assert host_ip is not None
+        print(f"[+] Container Networking: OK (IP: {host_ip})")
+    except Exception as e:
+        pytest.fail(f"Failed to validate container networking: {e}")
+    print("[+] Docker Setup Validation: PASSED")
+
 
 @pytest.fixture(scope="module")
 def start_system():
@@ -170,3 +201,5 @@ def test_system_crash_and_recovery(start_system):
     assert is_growing, "System failed to recover and resume data collection"
     assert frames_after > frames_before, "Metrics did not accumulate after recovery"
     print(f"[+] System fully recovered. Total frames: {frames_after}")
+
+
