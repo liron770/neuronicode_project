@@ -8,13 +8,20 @@ A distributed system for real-time vehicle detection in video streams, utilizing
    - test_system.py      # Main integration tests
    - test_negative.py    # Edge case and failure handling tests
    - config.py           # Test environment configurations
-   - utils.py            # Helper functions for tests 
+   - utils.py            # Helper functions for tests
+
  videoRoadTraffic.mp4    # Input video source
+ 
  cars.xml                # Haar Cascade model for vehicle detection
+ 
  Dockerfile              # Container configuration
+ 
  requirements.txt        # Python dependencies
+ 
  metrics.json            # Output file for system performance data
+ 
  sender.py               # Streams video frames via RTP using FFmpeg
+ 
  receiver.py             # Captures stream, runs AI detection, and logs metrics
 
 # Project Overview
