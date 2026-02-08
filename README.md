@@ -9,13 +9,13 @@ A distributed system for real-time vehicle detection in video streams, utilizing
    - test_negative.py    # Edge case and failure handling tests
    - config.py           # Test environment configurations
    - utils.py            # Helper functions for tests 
-- videoRoadTraffic.mp4    # Input video source
-- cars.xml                # Haar Cascade model for vehicle detection
-- Dockerfile              # Container configuration
-- requirements.txt        # Python dependencies
-- metrics.json            # Output file for system performance data
-- sender.py               # Streams video frames via RTP using FFmpeg
-- receiver.py             # Captures stream, runs AI detection, and logs metrics
+ videoRoadTraffic.mp4    # Input video source
+ cars.xml                # Haar Cascade model for vehicle detection
+ Dockerfile              # Container configuration
+ requirements.txt        # Python dependencies
+ metrics.json            # Output file for system performance data
+ sender.py               # Streams video frames via RTP using FFmpeg
+ receiver.py             # Captures stream, runs AI detection, and logs metrics
 
 # Project Overview
 
@@ -26,22 +26,18 @@ Receiver: Captures the stream, performs image processing (OpenCV Haar Cascades) 
 # Visual AI Validation (Bounding Boxes)
 
 The system doesn't just process data, it provides real-time visual feedback:
-
 Dynamic Bounding Boxes: The Receiver draws green rectangles around every detected vehicle in the stream.
-
 Frame-by-Frame Processing: Each frame is analyzed using the Haar Cascade model, and the coordinates are mapped instantly to the video display window.
 
 # Execution Instructions
 
-Option 1: Running on Windows (Recommended for AI Validation)
+# Option 1: Running on Windows (Recommended for AI Validation)
 To see the AI detection working with full accuracy, run the system natively:
 
 Before running the system, ensure the following are installed and configured:
 
 Python 3.10+: Ensure Python is added to your system PATH.
-
 FFmpeg: The system relies on FFmpeg for RTP streaming.
-
 Note: FFmpeg must be installed and the bin folder must be added to your System Environment Variables (PATH).
 
 To verify, run ffmpeg -version in your terminal. If it's not recognized, the sender.py will fail to start.
@@ -49,26 +45,33 @@ To verify, run ffmpeg -version in your terminal. If it's not recognized, the sen
 #Install Dependencies:
 
 # Bash
+```
 pip install -r requirements.txt
+```
 Run Tests:
 
 # Bash
+```
 pytest -v
+```
 
 # Manual Run:
 
 Start the Receiver: python receiver.py
 Start the Sender: python sender.py
 
-Option 2: Running via Docker (Infrastructure Validation)
+# Option 2: Running via Docker (Infrastructure Validation)
 To verify the containerized environment and networking:
 
-Bash
 # Build the image
+```
 docker build -t vehicle-detection .
+```
 
 # Run automated suite
+```
 docker run -it --rm vehicle-detection pytest -v
+```
 
 # Challenges && Known Issues
 
@@ -104,5 +107,14 @@ detection_ratio: Accuracy percentage.
 avg_latency_ms: Average processing time per frame.
 
 max_latency_ms: Peak processing time.
+
+Example metrics.json output:
+{
+  "total_frames": 150,
+  "detected_frames": 45,
+  "detection_ratio": 0.3,
+  "avg_latency_ms": 12.5,
+  "max_latency_ms": 48.2
+}
 
 
