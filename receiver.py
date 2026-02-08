@@ -5,7 +5,16 @@ import cv2
 import numpy as np
 import json
 
-
+"""
+This script receives an RTP video stream as defined in stream.sdp, processes each frame to detect vehicles using a Haar Cascade classifier.
+It performs the following operations:
+1. Stream Ingestion: Captures a live RTP video stream using the specifications in 'stream.sdp'.
+2. AI Inference: Employs a Haar Cascade classifier to detect vehicles in each frame in real-time.
+3. Computer Vision Overlay: Renders a GUI window displaying the video feed with dynamic 
+   bounding boxes (rectangles) around detected vehicles.
+4. Metrics Analytics: Continuously tracks performance and exports statistics to 'metrics.json',
+   including frame counts, detection ratios, and processing latency.
+"""
 def start_receiver():
     sdp_path = "stream.sdp"
     width, height = 1280, 720

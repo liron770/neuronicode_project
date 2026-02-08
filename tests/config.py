@@ -14,4 +14,4 @@ SUBPROCESS_CONFIG = {
 
 COMMANDS = {
     "sender": ["python", "sender.py","videoRoadTraffic.mp4"], 
-    "receiver": ["python", "receiver.py","videoRoadTraffic.mp4"]}
+    "receiver": ["python", "receiver.py"]}

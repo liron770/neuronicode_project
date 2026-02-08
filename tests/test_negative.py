@@ -1,7 +1,7 @@
+import cv2
 import pytest
 import subprocess
 import os
-import time
 from config import *
 from utils import *
 

@@ -3,7 +3,9 @@ import sys
 import time
 import os
 
-
+"""
+This script captures video frames from a specified video file, encodes them using H.264, and streams them over RTP to localhost:5004. It also generates an SDP file for the stream.
+"""
 def start_sender():
     video_source = sys.argv[1] if len(sys.argv) > 1 else "videoRoadTraffic.mp4"
 
